@@ -2,7 +2,7 @@
   "apiBase": "https://integrate.api.nvidia.com/v1",
   "apiKey": "",
   "defaultModel": "openai/gpt-oss-120b",
-  "questionCount": 20,
+  "questionCount": 50,
   "proxies": [
     "https://corsproxy.io/?url=",
     "https://api.codetabs.com/v1/proxy?quest=",

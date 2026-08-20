@@ -9,7 +9,7 @@ const AI_CONFIG_DEFAULTS = {
   apiBase: "https://integrate.api.nvidia.com/v1",
   apiKey: "",
   defaultModel: "openai/gpt-oss-120b",
-  questionCount: 20,
+  questionCount: 50,
   proxies: [
     /* NVIDIA's API does not send CORS headers, so browsers block direct
        calls. We retry through public CORS proxies when direct fetch fails. */
@@ -40,7 +40,7 @@ function applyAIConfig(cfg) {
   if (!cfg) return;
   if (cfg.apiBase) AI_BASE = String(cfg.apiBase);
   if (cfg.defaultModel) DEFAULT_MODEL = String(cfg.defaultModel);
-  if (cfg.questionCount) AI_QS_TARGET = Number(cfg.questionCount) || 20;
+  if (cfg.questionCount) AI_QS_TARGET = Number(cfg.questionCount) || 50;
   if (Array.isArray(cfg.proxies) && cfg.proxies.length) CORS_PROXIES = cfg.proxies.map(String);
   if (Array.isArray(cfg.models) && cfg.models.length) AI_MODELS = cfg.models.slice();
   DEFAULT_API_KEY = String(cfg.apiKey || "");
@@ -137,9 +137,10 @@ function aiPrompt(resume) {
     '5. Behavioral/HR questions (STAR-based) tied to their real achievements\n' +
     '6. A "why hire you" and "questions for us" wrap-up\n\n' +
     'Candidate resume:\n"""\n' + resume + '\n"""\n\n' +
-    'Reply with ONLY valid JSON — no markdown fences, no prose — in this exact shape:\n' +
+    'Reply with ONLY valid JSON — no markdown fences, no prose, nothing after the array — in this exact shape:\n' +
     '[{"question":"...","answer":"...","tags":["skilltag1","skilltag2"]}]\n\n' +
     'Rules:\n' +
+    '- Return a COMPLETE array with ' + AI_QS_TARGET + ' or more items; do NOT truncate or summarize — every question is a separate item.\n' +
     '- answers: 2-4 sentences, conversational, written as if the candidate will say them in the interview, using real facts from the resume.\n' +
     '- tags: lowercase skill tags from the resume (e.g. python, angular, sql, docker). Max 3 per question.';
 }
@@ -193,7 +194,7 @@ async function aiChat(messages, opts) {
     messages,
     temperature: 0.4,
     top_p: 0.95,
-    max_tokens: 4096,
+    max_tokens: 8192,
     chat_template_kwargs: { enable_thinking: true },
     reasoning_budget: 4096,
     stream: true
