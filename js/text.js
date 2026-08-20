@@ -8,7 +8,7 @@
 const APP_FALLBACK = {
   app: {
     name: "Resume-Powered Interview Prep",
-    brand: "RP",
+    brand: "RPAI",
     subtitle: "Paste your resume → personalized questions & skills",
     privacyNote: "Everything is stored in your browser (localStorage). No data leaves this machine."
   },
@@ -195,14 +195,28 @@ function applyAppText() {
   if (title != null) document.title = title;
 }
 
-/* Load data/app.json at startup; keep the inline fallback offline. */
+/* Separate JSON data files merged into APP at startup; keep the inline fallback offline. */
+const APP_SOURCES = [
+  "data/app.json",
+  "data/labels.json",
+  "data/messages.json",
+  "data/confirm.json",
+  "data/empty.json",
+  "data/export.json",
+  "data/templates.json",
+  "data/parser.json",
+  "data/shortcuts.json"
+];
+
 async function loadAppData() {
-  try {
-    const res = await fetch("data/app.json", { cache: "no-store" });
-    if (res.ok) {
-      const j = await res.json();
-      if (j && typeof j === "object" && Object.keys(j).length) APP = j;
-    }
-  } catch (e) { /* offline — keep inline fallback */ }
+  for (const url of APP_SOURCES) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.ok) {
+        const j = await res.json();
+        if (j && typeof j === "object") Object.assign(APP, j);
+      }
+    } catch (e) { /* offline — keep inline fallback */ }
+  }
   applyAppText();
 }

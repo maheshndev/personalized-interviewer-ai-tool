@@ -1,0 +1,6 @@
+{
+  "confirm": {
+    "resetAll": "Reset resume, skills, and all progress? This cannot be undone.",
+    "clearResume": "Clear the saved resume and generated questions?"
+  }
+}
