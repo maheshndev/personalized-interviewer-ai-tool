@@ -263,9 +263,9 @@ async function runAIGeneration() {
   const btn = document.getElementById("aiBtn");
   const pre = document.getElementById("aiPreview");
   aiGenerating = true;
-  btn.textContent = "Cancel";
+  btn.innerHTML = '<span class="inline-block w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin"></span><span class="ml-1.5">Cancel</span>';
   pre.classList.remove("hidden");
-  pre.innerHTML = '<div class="text-[11px] text-slate-300">Generating ' + AI_QS_TARGET + ' AI questions from your resume&hellip;</div>';
+  pre.innerHTML = '<div class="flex items-center gap-2 text-[11px] text-slate-300"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-slate-600 border-t-violet-400 animate-spin"></span><span>Generating ' + AI_QS_TARGET + ' AI questions from your resume&hellip;</span></div>';
   setAIState("Generating\u2026");
   try {
     const arr = await generateAIQuestions({});
