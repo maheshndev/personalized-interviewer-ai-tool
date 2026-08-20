@@ -2,8 +2,10 @@
 
 /* ==================================================================
    Skill knowledge base (id, name, keywords, sample technical Q&A)
+   data/skills.json is loaded at startup over HTTP; this inline map is
+   the offline/file:// fallback so the app always works.
 ================================================================== */
-const SKILL_MAP = {
+let SKILL_MAP = {
   python:     { id: "python",     name: "Python",     kw: ["python"], q: "What are decorators, generators, and context managers in Python?", a: "Decorators wrap functions to add cross-cutting behavior (auth, logging). Generators yield lazily, so big data never loads fully into memory. Context managers (`with open(...)`) guarantee cleanup even on errors. I use all three daily in FastAPI/Flask and Frappe hooks." },
   javascript: { id: "javascript", name: "JavaScript", kw: ["javascript", "js"], q: "Explain closures, the event loop, and hoisting in JavaScript.", a: "Closures let an inner function keep access to its outer scope. The event loop pulls callbacks from the message queue only when the call stack is empty, which is how async works. Hoisting moves declarations to the top; `let`/`const` still sit in the temporal dead zone. This underpins everything I write in the browser." },
   typescript: { id: "typescript", name: "TypeScript", kw: ["typescript", "ts"], q: "How do generics and type narrowing make code safer?", a: "Generics let one function serve many types with full type-checking; narrowing (`typeof`, `instanceof`, discriminated unions) refines types inside branches. With strict mode, a whole class of runtime bugs becomes compile-time errors. I used it heavily in the Angular and Resume Lens apps." },
@@ -35,8 +37,9 @@ const SKILL_MAP = {
 /* ==================================================================
    Role knowledge base
    Each role maps to the skill tags and/or section keywords it covers.
+   data/roles.json is loaded at startup; this is the offline fallback.
 ================================================================== */
-const ROLE_DEFS = [
+let ROLE_DEFS = [
   { id: "fullstack", name: "Full Stack", skills: ["javascript", "typescript", "html", "angular", "react", "vue", "python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis", "git", "docker", "aws"], sections: /full.?stack|general|project/i },
   { id: "frontend", name: "Frontend", skills: ["javascript", "typescript", "html", "angular", "react", "vue"], sections: /html|css|javascript|angular|vue|react|frontend|web component/i },
   { id: "backend", name: "Backend", skills: ["python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis"], sections: /python|node|java|php|backend|database|sql|nosql|redis|caching|api|server/i },
@@ -104,4 +107,32 @@ function tagFromText(text, defs) {
     }
   });
   return ids;
+}
+
+/* ==================================================================
+   Data-driven skill & role definitions (data/skills.json, data/roles.json)
+   Loaded over HTTP; keeps the inline defaults when offline (file://).
+================================================================== */
+async function loadSkillData() {
+  try {
+    const res = await fetch("data/skills.json", { cache: "no-store" });
+    if (res.ok) {
+      const j = await res.json();
+      if (j && typeof j === "object" && Object.keys(j).length) SKILL_MAP = j;
+    }
+  } catch (e) { /* offline — keep inline defaults */ }
+  try {
+    const res = await fetch("data/roles.json", { cache: "no-store" });
+    if (res.ok) {
+      const j = await res.json();
+      if (Array.isArray(j) && j.length) {
+        ROLE_DEFS = j.map(r => ({
+          id: r.id,
+          name: r.name,
+          skills: Array.isArray(r.skills) ? r.skills : [],
+          sections: r.sections ? new RegExp(r.sections, "i") : null
+        }));
+      }
+    }
+  } catch (e) { /* offline — keep inline defaults */ }
 }

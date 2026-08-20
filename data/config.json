@@ -3,6 +3,12 @@
   "apiKey": "",
   "defaultModel": "openai/gpt-oss-120b",
   "questionCount": 50,
+  "bankFiles": [
+    "data/questions.json",
+    "questions.json",
+    "Full_Stack_Developer_Interview_Questions.md",
+    "Mahesh_Interview_Questions.md"
+  ],
   "proxies": [
     "https://corsproxy.io/?url=",
     "https://api.codetabs.com/v1/proxy?quest=",

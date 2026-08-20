@@ -41,6 +41,7 @@ function applyAIConfig(cfg) {
   if (cfg.apiBase) AI_BASE = String(cfg.apiBase);
   if (cfg.defaultModel) DEFAULT_MODEL = String(cfg.defaultModel);
   if (cfg.questionCount) AI_QS_TARGET = Number(cfg.questionCount) || 50;
+  if (Array.isArray(cfg.bankFiles) && cfg.bankFiles.length) BANK_FILES = cfg.bankFiles;
   if (Array.isArray(cfg.proxies) && cfg.proxies.length) CORS_PROXIES = cfg.proxies.map(String);
   if (Array.isArray(cfg.models) && cfg.models.length) AI_MODELS = cfg.models.slice();
   DEFAULT_API_KEY = String(cfg.apiKey || "");
@@ -254,6 +255,7 @@ function toggleAI() {
     aiGenerating = false;
     document.getElementById("aiBtn").textContent = "Generate with AI";
     setAIState("Cancelled");
+    render();
     return;
   }
   runAIGeneration();
@@ -267,6 +269,8 @@ async function runAIGeneration() {
   pre.classList.remove("hidden");
   pre.innerHTML = '<div class="flex items-center gap-2 text-[11px] text-slate-300"><span class="inline-block w-3.5 h-3.5 rounded-full border-2 border-slate-600 border-t-violet-400 animate-spin"></span><span>Generating ' + AI_QS_TARGET + ' AI questions from your resume&hellip;</span></div>';
   setAIState("Generating\u2026");
+  activeTab = "ai";
+  render();
   try {
     const arr = await generateAIQuestions({});
     aiQs = arr.map((q, i) => {
@@ -295,6 +299,7 @@ async function runAIGeneration() {
   } finally {
     aiGenerating = false;
     aiAbort = null;
+    render();
   }
 }
 

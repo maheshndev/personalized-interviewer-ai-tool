@@ -91,7 +91,9 @@ function flattenBank(json) {
       id: q.id,
       question: q.question,
       answer: q.answer || "",
-      section: s.title || "General"
+      section: s.title || "General",
+      tags: Array.isArray(q.tags) ? q.tags : [],
+      skills: Array.isArray(q.skills) ? q.skills : []
     }));
   });
   return items;

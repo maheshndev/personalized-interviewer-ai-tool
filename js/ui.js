@@ -3,6 +3,29 @@
 /* Which cards are currently expanded — survives re-renders. */
 let openKeys = new Set();
 
+/* Status / difficulty / sort definitions — data/filters.json at runtime, inline fallback offline. */
+let FILTER_DEFS = null;
+
+async function loadFilterData() {
+  try {
+    const res = await fetch("data/filters.json", { cache: "no-store" });
+    if (res.ok) FILTER_DEFS = await res.json();
+  } catch (e) { /* offline — keep inline fallback */ }
+  renderSortSel();
+}
+
+function renderSortSel() {
+  const sel = document.getElementById("sortSel");
+  if (!sel) return;
+  const sort = (FILTER_DEFS && FILTER_DEFS.sort) || [
+    { value: "num", label: "Sort: # asc" },
+    { value: "numDesc", label: "Sort: # desc" },
+    { value: "section", label: "Sort: by section" },
+    { value: "random", label: "Sort: shuffle" }
+  ];
+  sel.innerHTML = sort.map(o => '<option value="' + esc(o.value) + '"' + (sortMode === o.value ? " selected" : "") + ">" + esc(o.label) + "</option>").join("");
+}
+
 /* ==================================================================
    Sidebar: skills + filters
 ================================================================== */
@@ -102,8 +125,13 @@ function renderFilters() {
     const d = getDiff(q);
     if (d === "e") c.e++; else if (d === "m") c.m++; else if (d === "h") c.h++; else c.u++;
   });
-  const statusItems = { new: "New", prepared: "Prepared", bookmarked: "\u2b50 Bookmarked", review: "\u21bb Review" };
-  const diffItems = { e: "Easy", m: "Medium", h: "Hard", u: "Untagged" };
+  const statuses = (FILTER_DEFS && FILTER_DEFS.status) || { new: "New", prepared: "Prepared", bookmarked: "\u2b50 Bookmarked", review: "\u21bb Review" };
+  const diffs = (FILTER_DEFS && FILTER_DEFS.difficulty) || { e: "Easy", m: "Medium", h: "Hard", u: "Untagged" };
+  const statusLabel = k => {
+    const v = statuses[k];
+    if (v && typeof v === "object") return (v.icon ? v.icon + " " : "") + v.label;
+    return v;
+  };
   const item = (group, key, label, n) => {
     const set = group === "status" ? statusSel : diffSel;
     const on = set.has(key);
@@ -111,8 +139,8 @@ function renderFilters() {
       '<input type="checkbox" ' + (on ? "checked " : "") + 'onchange="toggleFilter(\'' + group + '\',\'' + key + '\')" class="accent-blue-500 cursor-pointer shrink-0">' +
       '<span class="flex-1">' + label + '</span><span class="text-[10px] font-bold text-blue-400 bg-blue-500/10 rounded-full px-1.5 py-0.5 shrink-0">' + n + "</span></label>";
   };
-  document.getElementById("statusList").innerHTML = Object.keys(statusItems).map(k => item("status", k, statusItems[k], c[k])).join("");
-  document.getElementById("diffList").innerHTML = Object.keys(diffItems).map(k => item("diff", k, diffItems[k], c[k])).join("");
+  document.getElementById("statusList").innerHTML = Object.keys(statuses).map(k => item("status", k, statusLabel(k), c[k])).join("");
+  document.getElementById("diffList").innerHTML = Object.keys(diffs).map(k => item("diff", k, diffs[k], c[k])).join("");
   const active = statusSel.size + diffSel.size + roleSel.size;
   document.getElementById("filterCount").textContent = active ? "(" + active + ")" : "";
   document.getElementById("clearFiltersBtn").style.display = active ? "" : "none";
@@ -197,7 +225,7 @@ function render() {
   tA.className = tabCls(activeTab === "ai");
   tB.className = tabCls(activeTab === "bank");
   tP.textContent = "My Questions (" + personalQs.length + ")";
-  tA.textContent = "AI Questions (" + aiQs.length + ")";
+  tA.innerHTML = "AI Questions (" + aiQs.length + ")" + (aiGenerating ? ' <span class="inline-block align-middle w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>' : "");
   tB.textContent = "Question Bank (" + bankQs.length + ")";
 
   const chipsBox = document.getElementById("sectionChips");
@@ -212,7 +240,9 @@ function render() {
 
   const box = document.getElementById("questionList");
   const prevScroll = window.scrollY || 0;
-  if (!list.length) {
+  if (aiGenerating && activeTab === "ai") {
+    box.innerHTML = '<div class="text-center py-16 text-slate-400"><div class="inline-block w-8 h-8 rounded-full border-2 border-slate-600 border-t-violet-400 animate-spin mx-auto mb-4"></div><p class="text-sm mb-1 font-semibold">Generating ' + AI_QS_TARGET + ' personalized questions\u2026</p><p class="text-xs text-slate-500">This can take up to a minute \u2014 keep this tab open.</p></div>';
+  } else if (!list.length) {
     box.innerHTML = emptyStateHtml(pool);
   } else {
     box.innerHTML = list.map(qCardHtml).join("");
@@ -237,13 +267,11 @@ function emptyStateHtml(pool) {
   if (activeTab === "personal") {
     return wrap("\ud83d\udcc4",
       "No resume yet. Paste one on the left and hit <b>Generate questions</b>, or study the full question bank.",
-      '<button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-4 py-2" onclick="switchTab(\'bank\')">\ud83d\udcc4 Show all questions</button>' +
-      ' <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-4 py-2" onclick="document.getElementById(\'bankFile\').click()">\ud83d\udce6 Load bank file</button>');
+      '<button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-4 py-2" onclick="switchTab(\'bank\')">\ud83d\udcc4 Show all questions</button>');
   }
   if (activeTab === "bank") {
     return wrap("\ud83d\udce6",
-      "Question bank not loaded yet. Auto-loads over HTTP (GitHub Pages / local server), or pick the file:",
-      '<button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-4 py-2" onclick="document.getElementById(\'bankFile\').click()">\ud83d\udce6 Load Question Bank (.md / .json)</button>');
+      "Question bank not loaded yet \u2014 it auto-loads when served over HTTP (GitHub Pages / local server).");
   }
   return wrap("\ud83e\udd16",
     "No AI questions yet. Paste a resume, pick a model, then hit <b>Generate with AI</b> above.",

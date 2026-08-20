@@ -91,11 +91,7 @@
           class="w-full h-28 rounded-xl border border-slate-800 bg-slate-900 text-sm p-3 outline-none focus:border-blue-500 resize-y placeholder:text-slate-600"></textarea>
         <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
           <button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-3 py-1.5" onclick="saveResume(true)">&#9889; Generate questions</button>
-          <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5" onclick="document.getElementById('resumeFile').click()">Upload .md</button>
           <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5" onclick="clearResume()">Clear</button>
-          <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5" onclick="document.getElementById('bankFile').click()">&#128194; Load Question Bank</button>
-          <input type="file" id="resumeFile" accept=".md,.markdown,.txt,.pdf" style="display:none" onchange="handleResumeFile(event)">
-          <input type="file" id="bankFile" accept=".md,.markdown,.txt,.json" style="display:none" onchange="handleBankFile(event)">
         </div>
       </div>
 

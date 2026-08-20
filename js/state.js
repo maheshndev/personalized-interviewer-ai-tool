@@ -62,7 +62,7 @@ function handleResumeFile(ev) {
   reader.onload = () => {
     document.getElementById("resumeBox").value = String(reader.result);
     saveResume(true);
-    toast("Resume loaded from " + file.name);
+    toast("Resume loaded.");
   };
   reader.readAsText(file);
   ev.target.value = "";
@@ -70,7 +70,7 @@ function handleResumeFile(ev) {
 
 /* Turn a normalized question list into the app's bank with skill tags. */
 function applyBank(items, name) {
-  if (!items.length) { showNotice("No questions found in " + name + ".", "error"); return false; }
+  if (!items.length) { showNotice("No questions found in the file.", "error"); return false; }
   const seed = resumeText.trim() ? resumeText : items.map(q => q.question).join(" ");
   const defs = skillDefs.length ? skillDefs : detectSkills(seed);
   if (!skillDefs.length && defs.length) skillDefs = defs;
@@ -80,18 +80,20 @@ function applyBank(items, name) {
     question: q.question,
     answer: q.answer,
     section: q.section,
-    tags: tagFromText(q.question + " " + q.answer, defs)
+    tags: (Array.isArray(q.tags) && q.tags.length)
+      ? q.tags.filter(t => defs.some(d => d.id === t))
+      : tagFromText(q.question + " " + q.answer, defs)
   }));
   localStorage.setItem(LS.bank, JSON.stringify(items));
   if (activeTab === "bank") render();
-  showNotice("Loaded <b>" + name + "</b> with <b>" + bankQs.length + "</b> questions.", "ok");
+  showNotice("Loaded question bank with <b>" + bankQs.length + "</b> questions.", "ok");
   return true;
 }
 
 function loadBankText(text, name) {
   const parsed = parseQuestions(text);
   if (!parsed.questions.length) {
-    showNotice("No questions found in " + name + ". Expected <code># Section</code> headers and <code>### Q1. Question</code>.", "error");
+    showNotice("No questions found in the file. Expected <code># Section</code> headers and <code>### Q1. Question</code>.", "error");
     return false;
   }
   return applyBank(parsed.questions, name);
@@ -100,7 +102,7 @@ function loadBankText(text, name) {
 function loadBankJSON(json, name) {
   const items = flattenBank(json);
   if (!items.length) {
-    showNotice("No questions found in " + name + ". Expected a <code>{ sections: [{ title, questions: [...] }] }</code> shape.", "error");
+    showNotice("No questions found in the file. Expected a <code>{ sections: [{ title, questions: [...] }] }</code> shape.", "error");
     return false;
   }
   return applyBank(items, name);
@@ -133,11 +135,11 @@ function handleBankFile(ev) {
     let ok = false;
     if (/\.json$/i.test(file.name)) {
       try { ok = loadBankJSON(JSON.parse(text), file.name); }
-      catch (e) { showNotice("Invalid JSON in " + file.name + ": " + e.message, "error"); }
+      catch (e) { showNotice("Invalid JSON in the file: " + e.message, "error"); }
     } else {
       ok = loadBankText(text, file.name);
     }
-    if (ok) toast("Question bank loaded from " + file.name);
+    if (ok) toast("Question bank loaded.");
   };
   reader.readAsText(file);
   ev.target.value = "";

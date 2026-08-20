@@ -47,7 +47,7 @@ let searchTimer = null;
 let saveTimer = null;
 let toastTimer = null;
 
-const BANK_FILES = [
+let BANK_FILES = [
   "data/questions.json",
   "questions.json",
   "Full_Stack_Developer_Interview_Questions.md",

@@ -23,25 +23,29 @@ document.getElementById("resumeBox").addEventListener("input", () => {
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveResume(false), 800);
 });
-loadAIConfig().finally(() => loadAIModels());
 document.getElementById("aiModel").addEventListener("change", () => { window.manualModel = document.getElementById("aiModel").value; });
 
-/* No resume -> default to the full question bank so all questions show. */
-if (resumeText.trim()) {
-  buildQuestions();
-  userRoles = detectRoles(resumeText);
-  if (!roleSel.size && userRoles.length) {
-    roleSel = new Set(userRoles);
-    localStorage.setItem(LS.roles, JSON.stringify([...roleSel]));
-  }
-  activeTab = "personal";
-} else {
-  activeTab = "bank";
-}
-
-render();
-
+/* Load skill/role definitions (data/skills.json, data/roles.json) before
+   detection runs, then config/models, then the bank. Offline keeps defaults. */
 (async () => {
+  await loadSkillData();
+  loadFilterData();
+  loadAIConfig().finally(() => loadAIModels());
+
+  if (resumeText.trim()) {
+    buildQuestions();
+    userRoles = detectRoles(resumeText);
+    if (!roleSel.size && userRoles.length) {
+      roleSel = new Set(userRoles);
+      localStorage.setItem(LS.roles, JSON.stringify([...roleSel]));
+    }
+    activeTab = "personal";
+  } else {
+    activeTab = "bank";
+  }
+
+  render();
+
   const ok = await loadBankFromFiles();
   if (ok) pruneSelections(); /* only prune once the bank is loaded (avoid wiping bank progress) */
   render();
