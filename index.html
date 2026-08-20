@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume-Powered Interview Prep</title>
+<title data-i18n="app.name">Resume-Powered Interview Prep</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -17,12 +17,12 @@
 <header class="sticky top-0 z-50 bg-slate-950/85 backdrop-blur border-b border-slate-800 flex items-center gap-3 px-4 sm:px-6 py-3">
   <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center font-extrabold text-white text-sm shrink-0">RP</div>
   <div class="min-w-0">
-    <h1 class="text-sm sm:text-base font-bold leading-tight truncate">Resume-Powered Interview Prep</h1>
-    <p class="text-xs text-slate-400 truncate" id="appSubtitle">Paste your resume &rarr; personalized questions &amp; skills</p>
+    <h1 class="text-sm sm:text-base font-bold leading-tight truncate" data-i18n="app.name">Resume-Powered Interview Prep</h1>
+    <p class="text-xs text-slate-400 truncate" id="appSubtitle" data-i18n="app.subtitle">Paste your resume &rarr; personalized questions &amp; skills</p>
   </div>
   <div class="ml-auto flex items-center gap-2">
-    <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5" onclick="exportList()">&#11015; Export</button>
-    <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5" onclick="resetAll()">Reset</button>
+    <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5" onclick="exportList()" data-i18n="labels.export">&#11015; Export</button>
+    <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5" onclick="resetAll()" data-i18n="labels.reset">Reset</button>
   </div>
 </header>
 
@@ -33,11 +33,11 @@
     <!-- Skills -->
     <section>
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Skills <span class="normal-case font-normal tracking-normal" id="skillCount"></span></h2>
+        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold"><span data-i18n="labels.skills">Skills</span> <span class="normal-case font-normal tracking-normal" id="skillCount"></span></h2>
         <div class="flex gap-1.5">
-          <button class="text-[11px] text-blue-400 hover:text-blue-300" onclick="selectAllSkills(true)">All</button>
+          <button class="text-[11px] text-blue-400 hover:text-blue-300" onclick="selectAllSkills(true)" data-i18n="labels.all">All</button>
           <span class="text-slate-700">|</span>
-          <button class="text-[11px] text-blue-400 hover:text-blue-300" onclick="selectAllSkills(false)">None</button>
+          <button class="text-[11px] text-blue-400 hover:text-blue-300" onclick="selectAllSkills(false)" data-i18n="labels.none">None</button>
         </div>
       </div>
       <div id="skillList" class="space-y-0.5 max-h-64 overflow-y-auto pr-1 text-sm text-slate-400">
@@ -48,33 +48,33 @@
     <!-- Roles -->
     <section>
       <div class="flex items-center justify-between mb-2">
-        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Roles <span class="normal-case font-normal tracking-normal" id="roleCount"></span></h2>
+        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold"><span data-i18n="labels.roles">Roles</span> <span class="normal-case font-normal tracking-normal" id="roleCount"></span></h2>
         <div class="flex gap-1.5">
-          <button class="text-[11px] text-violet-400 hover:text-violet-300" onclick="selectAllRoles(true)">All</button>
+          <button class="text-[11px] text-violet-400 hover:text-violet-300" onclick="selectAllRoles(true)" data-i18n="labels.all">All</button>
           <span class="text-slate-700">|</span>
-          <button class="text-[11px] text-violet-400 hover:text-violet-300" onclick="selectAllRoles(false)">None</button>
+          <button class="text-[11px] text-violet-400 hover:text-violet-300" onclick="selectAllRoles(false)" data-i18n="labels.none">None</button>
         </div>
       </div>
       <div id="roleList" class="space-y-0.5 max-h-56 overflow-y-auto pr-1 text-sm text-slate-400">
-        <p class="text-xs text-slate-500 py-1">Pick a role to focus on its questions. Detected from your resume when present.</p>
+        <p class="text-xs text-slate-500 py-1" data-i18n="empty.rolesEmpty">Pick a role to focus on its questions. Detected from your resume when present.</p>
       </div>
     </section>
 
     <!-- Filters -->
     <section>
-      <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2">Filters <span class="normal-case font-normal tracking-normal" id="filterCount"></span></h2>
+      <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2"><span data-i18n="labels.filters">Filters</span> <span class="normal-case font-normal tracking-normal" id="filterCount"></span></h2>
       <div class="mb-3">
-        <p class="text-[11px] text-slate-500 mb-1.5">Status</p>
+        <p class="text-[11px] text-slate-500 mb-1.5" data-i18n="labels.status">Status</p>
         <div id="statusList" class="space-y-0.5 text-sm text-slate-400"></div>
       </div>
       <div>
-        <p class="text-[11px] text-slate-500 mb-1.5">Difficulty</p>
+        <p class="text-[11px] text-slate-500 mb-1.5" data-i18n="labels.difficulty">Difficulty</p>
         <div id="diffList" class="space-y-0.5 text-sm text-slate-400"></div>
       </div>
-      <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5 mt-3" id="clearFiltersBtn" onclick="clearFilters()" style="display:none">&#10005; Clear filters</button>
+      <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5 mt-3" id="clearFiltersBtn" onclick="clearFilters()" data-i18n="labels.clearFilters" style="display:none">&#10005; Clear filters</button>
     </section>
 
-    <p class="text-[11px] text-slate-600 leading-relaxed">
+    <p class="text-[11px] text-slate-600 leading-relaxed" data-i18n="app.privacyNote">
       Everything is stored in your browser (localStorage). No data leaves this machine.
     </p>
   </aside>
@@ -86,29 +86,21 @@
     <!-- Resume + AI (top center) -->
     <div class="mb-4 max-w-4xl mx-auto space-y-3">
       <div class="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2 text-center">Resume <span class="normal-case font-normal tracking-normal" id="resumeStatus"></span> <span class="live-dot ml-1 text-[10px] text-emerald-400" id="resumeLive" style="display:none">&#9679;</span></h2>
-        <textarea id="resumeBox" spellcheck="false" placeholder="Paste your resume here (plain text or markdown). It saves automatically as you type; click Generate questions to rebuild your personalized set."
+        <h2 class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mb-2 text-center"><span data-i18n="labels.resume">Resume</span> <span class="normal-case font-normal tracking-normal" id="resumeStatus"></span> <span class="live-dot ml-1 text-[10px] text-emerald-400" id="resumeLive" style="display:none">&#9679;</span></h2>
+        <textarea id="resumeBox" spellcheck="false" data-i18n-placeholder="labels.resumePlaceholder" placeholder="Paste your resume here (plain text or markdown). It saves automatically as you type; click Generate questions to rebuild your personalized set."
           class="w-full h-28 rounded-xl border border-slate-800 bg-slate-900 text-sm p-3 outline-none focus:border-blue-500 resize-y placeholder:text-slate-600"></textarea>
         <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
-          <button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-3 py-1.5" onclick="saveResume(true)">&#9889; Generate questions</button>
-          <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5" onclick="clearResume()">Clear</button>
+          <button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-3 py-1.5" onclick="saveResume(true)" data-i18n="labels.generate">&#9889; Generate questions</button>
+          <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-1.5" onclick="clearResume()" data-i18n="labels.clear">Clear</button>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mr-1">AI Interviewer</span>
+        <span class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold mr-1" data-i18n="labels.aiInterviewer">AI Interviewer</span>
         <select id="aiModel" class="text-xs bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 outline-none focus:border-violet-500">
-          <option value="openai/gpt-oss-120b" selected>GPT-OSS 120B</option>
-          <option value="nvidia/nemotron-3-ultra-550b-a55b">Nemotron Ultra 550B</option>
-          <option value="nvidia/nemotron-3-super-120b-a12b">Nemotron Super 120B</option>
-          <option value="openai/gpt-oss-20b">GPT-OSS 20B</option>
-          <option value="google/gemma-4-31b-it">Gemma 4 31B Instruct</option>
-          <option value="z-ai/glm-5.2">GLM 5.2</option>
-          <option value="minimaxai/minimax-m3">MiniMax M3</option>
-          <option value="stepfun-ai/step-3.7-flash">Step 3.7 Flash</option>
         </select>
-        <button class="text-xs font-semibold bg-violet-600 hover:bg-violet-500 rounded-lg px-3 py-2" id="aiBtn" onclick="toggleAI()">&#9889; Generate with AI</button>
-        <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-2" onclick="clearAI()">Clear AI</button>
+        <button class="text-xs font-semibold bg-violet-600 hover:bg-violet-500 rounded-lg px-3 py-2" id="aiBtn" onclick="toggleAI()" data-i18n="labels.generateAI">&#9889; Generate with AI</button>
+        <button class="text-xs font-semibold bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg px-3 py-2" onclick="clearAI()" data-i18n="labels.clearAI">Clear AI</button>
         <span class="text-xs font-normal tracking-normal" id="aiStatus"></span>
       </div>
       <div id="aiPreview" class="hidden rounded-xl border border-slate-800 bg-slate-950 p-3 max-h-56 overflow-y-auto text-[11px]"></div>
@@ -124,7 +116,7 @@
     <div class="flex flex-wrap items-center gap-2 mb-4">
       <div class="relative flex-1 min-w-[200px]">
         <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">&#128269;</span>
-        <input id="searchBox" type="text" placeholder="Search questions&hellip;  (/ to focus)" oninput="debouncedSearch()"
+        <input id="searchBox" type="text" data-i18n-placeholder="labels.searchPlaceholder" placeholder="Search questions&hellip;  (/ to focus)" oninput="debouncedSearch()"
           class="w-full rounded-xl border border-slate-800 bg-slate-900 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-blue-500 placeholder:text-slate-600">
       </div>
       <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2">
@@ -132,13 +124,9 @@
         <div class="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden"><div id="progressFill" class="h-full bg-gradient-to-r from-emerald-400 to-blue-500" style="width:0%"></div></div>
       </div>
       <select id="sortSel" onchange="setSort(this.value)" title="Sort questions" class="text-xs bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 outline-none focus:border-blue-500">
-        <option value="num">Sort: # asc</option>
-        <option value="numDesc">Sort: # desc</option>
-        <option value="section">Sort: by section</option>
-        <option value="random">Sort: shuffle</option>
       </select>
-      <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5" onclick="randomQ()">&#127922; Random</button>
-      <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5" id="expandBtn" onclick="toggleExpand()">Expand all</button>
+      <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5" onclick="randomQ()" data-i18n="labels.random">&#127922; Random</button>
+      <button class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5" id="expandBtn" onclick="toggleExpand()" data-i18n="labels.expandAll">Expand all</button>
     </div>
 
     <div id="sectionChips" class="flex flex-wrap gap-1.5 mb-4"></div>
@@ -149,6 +137,7 @@
 <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 bg-slate-800 border border-emerald-500 text-slate-100 text-sm px-4 py-2 rounded-xl shadow-2xl z-[60] opacity-0 pointer-events-none transition-all duration-300 max-w-[90vw]"></div>
 
 <script src="js/util.js"></script>
+<script src="js/text.js"></script>
 <script src="js/data.js"></script>
 <script src="js/skills.js"></script>
 <script src="js/parser.js"></script>

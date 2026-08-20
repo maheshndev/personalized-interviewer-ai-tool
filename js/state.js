@@ -7,7 +7,7 @@ function saveResume(regenerate) {
   resumeText = document.getElementById("resumeBox").value;
   localStorage.setItem(LS.resume, resumeText);
   lastSavedAt = new Date();
-  document.getElementById("resumeStatus").textContent = "saved " + lastSavedAt.toLocaleTimeString();
+  document.getElementById("resumeStatus").textContent = T("resumeSaved", { time: lastSavedAt.toLocaleTimeString() });
   if (regenerate) {
     buildQuestions();
     userRoles = detectRoles(resumeText);
@@ -18,7 +18,7 @@ function saveResume(regenerate) {
     pruneSelections();
     render();
     const rn = userRoles.map(id => (ROLE_DEFS.find(d => d.id === id) || {}).name).join(", ");
-    toast(personalQs.length + " personalized questions generated" + (rn ? " · role detected: " + rn : "") + " from your resume");
+    toast(T("generatedN", { n: personalQs.length, role: rn ? T("roleDetected", { roles: rn }) : "" }));
   }
 }
 
@@ -38,7 +38,7 @@ function pruneSelections() {
 }
 
 function clearResume() {
-  if (resumeText && !confirm("Clear the saved resume and generated questions?")) return;
+  if (resumeText && !confirm(APP.confirm.clearResume)) return;
   resumeText = "";
   document.getElementById("resumeBox").value = "";
   localStorage.removeItem(LS.resume);
@@ -52,7 +52,7 @@ function clearResume() {
   document.getElementById("resumeStatus").textContent = "";
   activeTab = "bank";
   render();
-  toast("Resume cleared");
+  toast(T("resumeCleared"));
 }
 
 function handleResumeFile(ev) {
@@ -62,7 +62,7 @@ function handleResumeFile(ev) {
   reader.onload = () => {
     document.getElementById("resumeBox").value = String(reader.result);
     saveResume(true);
-    toast("Resume loaded.");
+    toast(T("resumeLoaded"));
   };
   reader.readAsText(file);
   ev.target.value = "";
@@ -70,7 +70,7 @@ function handleResumeFile(ev) {
 
 /* Turn a normalized question list into the app's bank with skill tags. */
 function applyBank(items, name) {
-  if (!items.length) { showNotice("No questions found in the file.", "error"); return false; }
+  if (!items.length) { showNotice(T("bankNotFound"), "error"); return false; }
   const seed = resumeText.trim() ? resumeText : items.map(q => q.question).join(" ");
   const defs = skillDefs.length ? skillDefs : detectSkills(seed);
   if (!skillDefs.length && defs.length) skillDefs = defs;
@@ -86,14 +86,14 @@ function applyBank(items, name) {
   }));
   localStorage.setItem(LS.bank, JSON.stringify(items));
   if (activeTab === "bank") render();
-  showNotice("Loaded question bank with <b>" + bankQs.length + "</b> questions.", "ok");
+  showNotice(T("bankLoadedN", { n: bankQs.length }), "ok");
   return true;
 }
 
 function loadBankText(text, name) {
   const parsed = parseQuestions(text);
   if (!parsed.questions.length) {
-    showNotice("No questions found in the file. Expected <code># Section</code> headers and <code>### Q1. Question</code>.", "error");
+    showNotice(T("bankTextExpected"), "error");
     return false;
   }
   return applyBank(parsed.questions, name);
@@ -102,7 +102,7 @@ function loadBankText(text, name) {
 function loadBankJSON(json, name) {
   const items = flattenBank(json);
   if (!items.length) {
-    showNotice("No questions found in the file. Expected a <code>{ sections: [{ title, questions: [...] }] }</code> shape.", "error");
+    showNotice(T("bankJSONExpected"), "error");
     return false;
   }
   return applyBank(items, name);
@@ -122,7 +122,7 @@ async function loadBankFromFiles() {
     } catch (e) { /* file:// blocks fetch — keep trying / fall back */ }
   }
   const cached = safeParse(LS.bank, null);
-  if (Array.isArray(cached) && cached.length) return applyBank(cached, "cached question bank (localStorage)");
+  if (Array.isArray(cached) && cached.length) return applyBank(cached, T("cachedBank"));
   return false;
 }
 
@@ -135,11 +135,11 @@ function handleBankFile(ev) {
     let ok = false;
     if (/\.json$/i.test(file.name)) {
       try { ok = loadBankJSON(JSON.parse(text), file.name); }
-      catch (e) { showNotice("Invalid JSON in the file: " + e.message, "error"); }
+      catch (e) { showNotice(T("invalidJSON", { error: e.message }), "error"); }
     } else {
       ok = loadBankText(text, file.name);
     }
-    if (ok) toast("Question bank loaded.");
+    if (ok) toast(T("bankLoaded"));
   };
   reader.readAsText(file);
   ev.target.value = "";

@@ -9,6 +9,14 @@
     "Full_Stack_Developer_Interview_Questions.md",
     "Mahesh_Interview_Questions.md"
   ],
+  "ai": {
+    "temperature": 0.4,
+    "topP": 0.95,
+    "maxTokens": 8192,
+    "reasoningBudget": 4096,
+    "thinking": true,
+    "attempts": 2
+  },
   "proxies": [
     "https://corsproxy.io/?url=",
     "https://api.codetabs.com/v1/proxy?quest=",

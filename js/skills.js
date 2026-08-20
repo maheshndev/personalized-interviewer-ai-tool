@@ -40,14 +40,14 @@ let SKILL_MAP = {
    data/roles.json is loaded at startup; this is the offline fallback.
 ================================================================== */
 let ROLE_DEFS = [
-  { id: "fullstack", name: "Full Stack", skills: ["javascript", "typescript", "html", "angular", "react", "vue", "python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis", "git", "docker", "aws"], sections: /full.?stack|general|project/i },
-  { id: "frontend", name: "Frontend", skills: ["javascript", "typescript", "html", "angular", "react", "vue"], sections: /html|css|javascript|angular|vue|react|frontend|web component/i },
-  { id: "backend", name: "Backend", skills: ["python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis"], sections: /python|node|java|php|backend|database|sql|nosql|redis|caching|api|server/i },
-  { id: "devops", name: "DevOps / Cloud", skills: ["docker", "kubernetes", "aws", "linux", "nginx", "git", "cicd"], sections: /cloud|devops|docker|container|kubernetes|linux|ci\/cd|aws|deploy/i },
-  { id: "database", name: "Database", skills: ["sql", "mongodb", "redis"], sections: /database|sql|nosql|mongodb|redis|caching/i },
-  { id: "erp", name: "ERP / Frappe", skills: ["frappe"], sections: /frappe|erpnext|erp/i },
-  { id: "testing", name: "QA / Testing", skills: ["testing"], sections: /testing|qa|quality/i },
-  { id: "dsa", name: "DSA / Algorithms", skills: [], sections: /algorithm|data structure|problem solving|machine coding|coding challenge/i }
+  { id: "fullstack", name: "Full Stack", detect: "full.?stack", skills: ["javascript", "typescript", "html", "angular", "react", "vue", "python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis", "git", "docker", "aws"], sections: /full.?stack|general|project/i },
+  { id: "frontend", name: "Frontend", detect: "front.?end|front end developer", skills: ["javascript", "typescript", "html", "angular", "react", "vue"], sections: /html|css|javascript|angular|vue|react|frontend|web component/i },
+  { id: "backend", name: "Backend", detect: "back.?end|backend developer", skills: ["python", "nodejs", "fastapi", "flask", "django", "java", "php", "rest", "sql", "mongodb", "redis"], sections: /python|node|java|php|backend|database|sql|nosql|redis|caching|api|server/i },
+  { id: "devops", name: "DevOps / Cloud", detect: "devops|sre|site reliability|infrastructure engineer", skills: ["docker", "kubernetes", "aws", "linux", "nginx", "git", "cicd"], sections: /cloud|devops|docker|container|kubernetes|linux|ci\/cd|aws|deploy/i },
+  { id: "database", name: "Database", detect: "database|dba|sql developer", skills: ["sql", "mongodb", "redis"], sections: /database|sql|nosql|mongodb|redis|caching/i },
+  { id: "erp", name: "ERP / Frappe", detect: "erp|frappe|erpnext", skills: ["frappe"], sections: /frappe|erpnext|erp/i },
+  { id: "testing", name: "QA / Testing", detect: "qa|testing|test engineer|quality|sdet", skills: ["testing"], sections: /testing|qa|quality/i },
+  { id: "dsa", name: "DSA / Algorithms", detect: "dsa|algorithm|data structure|problem solving|competitive programming", skills: [], sections: /algorithm|data structure|problem solving|machine coding|coding challenge/i }
 ];
 
 /* Which roles the user's resume points to (from title, summary, skills). */
@@ -59,12 +59,7 @@ function detectRoles(text) {
   return ROLE_DEFS
     .filter(def => {
       if (new RegExp("\\b" + escRe(def.name.toLowerCase()) + "\\b").test(hay)) return true;
-      if (def.id === "fullstack" && /full.?stack/.test(hay)) return true;
-      if (def.id === "frontend" && /front.?end/.test(hay)) return true;
-      if (def.id === "backend" && /back.?end/.test(hay)) return true;
-      if (def.id === "erp" && /erp|frappe|erpnext/.test(hay)) return true;
-      if (def.id === "testing" && /qa|testing|test engineer|quality/.test(hay)) return true;
-      if (def.id === "dsa" && /dsa|algorithm|data structure|problem solving|competitive programming/.test(hay)) return true;
+      if (def.detect && new RegExp(def.detect, "i").test(hay)) return true;
       return def.skills.some(s => new RegExp("\\b" + escRe(s) + "\\b").test(low));
     })
     .map(d => d.id);
@@ -129,6 +124,7 @@ async function loadSkillData() {
         ROLE_DEFS = j.map(r => ({
           id: r.id,
           name: r.name,
+          detect: r.detect ? String(r.detect) : null,
           skills: Array.isArray(r.skills) ? r.skills : [],
           sections: r.sections ? new RegExp(r.sections, "i") : null
         }));

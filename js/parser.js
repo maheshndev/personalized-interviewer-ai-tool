@@ -15,12 +15,12 @@ function parseResume(text) {
     if ((m = line.match(/^#\s+(.+?)\s*$/))) { data.name = m[1]; continue; }
     if ((m = line.match(/^#{3,}\s+(.+?)\s*$/))) {
       const t = m[1].trim();
-      if (/work|experience|employment/i.test(section)) {
+      if (secRx("work").test(section)) {
         const parts = t.split(/\s*[|–—]\s*/).filter(Boolean);
         inJob = { title: parts[1] || t, company: parts[0] || "", dates: parts[parts.length - 1] || "", bullets: [] };
         data.jobs.push(inJob);
       }
-      else if (/project/i.test(section)) { inProject = { name: t, tech: "", bullets: [], impact: "" }; data.projects.push(inProject); }
+      else if (secRx("project").test(section)) { inProject = { name: t, tech: "", bullets: [], impact: "" }; data.projects.push(inProject); }
       continue;
     }
     if ((m = line.match(/^#{2}\s+(.+?)\s*$/))) { section = m[1].toLowerCase(); inProject = null; inJob = null; continue; }
@@ -28,15 +28,15 @@ function parseResume(text) {
     if (techLine) { inProject.tech = techLine[1].trim(); continue; }
     if ((m = line.match(/^[-*]\s+(.+?)\s*$/))) {
       const b = m[1];
-      if (/summary|about|profile/i.test(section)) data.summary += (data.summary ? " " : "") + b;
-      else if (/skill/i.test(section)) {
+      if (secRx("summary").test(section)) data.summary += (data.summary ? " " : "") + b;
+      else if (secRx("skill").test(section)) {
         const gm = b.match(/^\*{0,2}([^:*]+):?\*{0,2}\s*(.+)$/);
         if (gm) data.skillGroups.push({ group: gm[1], items: gm[2].split(",").map(s => s.trim()).filter(Boolean) });
         else data.skills.push(b.replace(/^\*\*/, "").replace(/\*\*$/, "").trim());
       }
-      else if (/education|degree/i.test(section)) data.education.push(b);
-      else if (/certif/i.test(section)) data.certs.push(b);
-      else if (/achiev/i.test(section)) data.achievements.push(b);
+      else if (secRx("education").test(section)) data.education.push(b);
+      else if (secRx("cert").test(section)) data.certs.push(b);
+      else if (secRx("achievement").test(section)) data.achievements.push(b);
       else if (inProject) {
         const tm = b.match(/^\*{0,2}Tech [Ss]tack:?\*{0,2}\s*(.+)$/);
         if (tm) inProject.tech = tm[1];
@@ -46,11 +46,11 @@ function parseResume(text) {
       continue;
     }
     if (!inProject && !inJob) {
-      if (/summary|about|profile/i.test(section)) data.summary += (data.summary ? " " : "") + line;
-      else if (/contact|email|phone|location/i.test(section)) data.title = (data.title || "") + " " + line;
-      else if (/education|degree/i.test(section)) data.education.push(line);
-      else if (/certif/i.test(section)) data.certs.push(line);
-      else if (/achiev/i.test(section)) data.achievements.push(line);
+      if (secRx("summary").test(section)) data.summary += (data.summary ? " " : "") + line;
+      else if (secRx("contact").test(section)) data.title = (data.title || "") + " " + line;
+      else if (secRx("education").test(section)) data.education.push(line);
+      else if (secRx("cert").test(section)) data.certs.push(line);
+      else if (secRx("achievement").test(section)) data.achievements.push(line);
     }
   }
   const flat = data.skillGroups.reduce((a, g) => a.concat(g.items), []);
@@ -73,7 +73,7 @@ function parseQuestions(md) {
       const sec = line.match(/^#\s+(?:[0-9]+\.\s*)?(.+?)\s*$/);
       if (sec) { if (current) qs.push(current); current = null; section = sec[1].trim(); if (section && order.indexOf(section) === -1) order.push(section); continue; }
       const q = line.match(/^###\s*Q?(\d+)\.\s*(.+?)\s*$/i);
-      if (q) { if (current) qs.push(current); current = { id: parseInt(q[1], 10), question: q[2].trim(), section: section || "General", answer: "" }; }
+      if (q) { if (current) qs.push(current); current = { id: parseInt(q[1], 10), question: q[2].trim(), section: section || APP.parser.fallbackSection, answer: "" }; }
       else { if (current) qs.push(current); current = null; }
       continue;
     }
@@ -91,7 +91,7 @@ function flattenBank(json) {
       id: q.id,
       question: q.question,
       answer: q.answer || "",
-      section: s.title || "General",
+      section: s.title || APP.parser.fallbackSection,
       tags: Array.isArray(q.tags) ? q.tags : [],
       skills: Array.isArray(q.skills) ? q.skills : []
     }));

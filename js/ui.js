@@ -32,7 +32,7 @@ function renderSortSel() {
 function renderSkills() {
   const box = document.getElementById("skillList");
   if (!skillDefs.length) {
-    box.innerHTML = '<p class="text-xs text-slate-500 py-1">Add your resume above to detect skills.</p>';
+    box.innerHTML = '<p class="text-xs text-slate-500 py-1">' + APP.empty.skillsEmpty + "</p>";
     document.getElementById("skillCount").textContent = "";
     return;
   }
@@ -88,7 +88,7 @@ function renderRoles() {
       (q.tags || []).some(t => sset.has(t)) || (def.sections && def.sections.test((q.section || "").toLowerCase()))
     ).length;
   });
-  const detected = userRoles.length ? ' <span class="text-emerald-400" title="Detected from your resume">&#9679;</span>' : "";
+  const detected = userRoles.length ? ' <span class="text-emerald-400" title="' + APP.labels.detectedFromResume + '">&#9679;</span>' : "";
   document.getElementById("roleCount").innerHTML = "(" + ROLE_DEFS.length + ")" + detected;
   box.innerHTML = ROLE_DEFS.map(def => {
     const n = counts[def.id] || 0;
@@ -156,7 +156,7 @@ function clearFilters() {
   statusSel.clear(); diffSel.clear(); roleSel.clear();
   localStorage.setItem(LS.roles, JSON.stringify([]));
   renderFilters(); renderRoles(); render();
-  toast("Filters cleared");
+  toast(T("filtersCleared"));
 }
 
 /* ==================================================================
@@ -199,11 +199,15 @@ function updateHeader() {
   if (resumeText.trim()) {
     const r = parseResume(resumeText);
     const roleNames = userRoles.map(id => (ROLE_DEFS.find(d => d.id === id) || {}).name).filter(Boolean).join(", ");
-    sub.textContent = "Preparing " + (r.name || "your resume") + " — " + skillDefs.length + " skills" +
-      (roleNames ? " · " + roleNames : "") + " · " + (personalQs.length + aiQs.length) + " personalized questions";
+    sub.textContent = T("headerPreparing", {
+      name: r.name || "your resume",
+      skills: skillDefs.length,
+      roles: roleNames ? " · " + roleNames : "",
+      count: personalQs.length + aiQs.length
+    });
     if (live) live.style.display = "";
   } else {
-    sub.textContent = "No resume yet — showing all " + bankQs.length + " bank questions";
+    sub.textContent = T("headerNoResume", { n: bankQs.length });
     if (live) live.style.display = "none";
   }
 }
@@ -215,7 +219,7 @@ function render() {
   updateHeader();
   const list = filtered();
   const pool = activePool();
-  document.getElementById("resultCount").textContent = "Showing " + list.length + " of " + pool.length + " questions";
+  document.getElementById("resultCount").textContent = T("resultCount", { shown: list.length, total: pool.length });
 
   const tabCls = (on) => "tab text-xs font-bold px-3 py-2 rounded-lg " + (on ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-300 border border-slate-700");
   const tP = document.getElementById("tabPersonal");
@@ -224,15 +228,15 @@ function render() {
   tP.className = tabCls(activeTab === "personal");
   tA.className = tabCls(activeTab === "ai");
   tB.className = tabCls(activeTab === "bank");
-  tP.textContent = "My Questions (" + personalQs.length + ")";
-  tA.innerHTML = "AI Questions (" + aiQs.length + ")" + (aiGenerating ? ' <span class="inline-block align-middle w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>' : "");
-  tB.textContent = "Question Bank (" + bankQs.length + ")";
+  tP.textContent = L("tabPersonal") + " (" + personalQs.length + ")";
+  tA.innerHTML = L("tabAI") + " (" + aiQs.length + ")" + (aiGenerating ? ' <span class="inline-block align-middle w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></span>' : "");
+  tB.textContent = L("tabBank") + " (" + bankQs.length + ")";
 
   const chipsBox = document.getElementById("sectionChips");
   if (activeTab === "bank") {
     const secs = [];
     bankQs.forEach(q => { if (secs.indexOf(q.section) === -1) secs.push(q.section); });
-    chipsBox.innerHTML = '<button class="text-xs px-2.5 py-1 rounded-full ' + (activeSection === "All" ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 border border-slate-700") + '" onclick="setSection(\'All\')">All</button>' +
+    chipsBox.innerHTML = '<button class="text-xs px-2.5 py-1 rounded-full ' + (activeSection === "All" ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 border border-slate-700") + '" onclick="setSection(\'All\')">' + L("all") + "</button>" +
       secs.map(s => '<button class="text-xs px-2.5 py-1 rounded-full ' + (activeSection === s ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-400 border border-slate-700") + '" onclick="setSection(\'' + s.replace(/'/g, "\\'") + '\')">' + esc(s) + "</button>").join("");
   } else {
     chipsBox.innerHTML = "";
@@ -241,7 +245,7 @@ function render() {
   const box = document.getElementById("questionList");
   const prevScroll = window.scrollY || 0;
   if (aiGenerating && activeTab === "ai") {
-    box.innerHTML = '<div class="text-center py-16 text-slate-400"><div class="inline-block w-8 h-8 rounded-full border-2 border-slate-600 border-t-violet-400 animate-spin mx-auto mb-4"></div><p class="text-sm mb-1 font-semibold">Generating ' + AI_QS_TARGET + ' personalized questions\u2026</p><p class="text-xs text-slate-500">This can take up to a minute \u2014 keep this tab open.</p></div>';
+    box.innerHTML = '<div class="text-center py-16 text-slate-400"><div class="inline-block w-8 h-8 rounded-full border-2 border-slate-600 border-t-violet-400 animate-spin mx-auto mb-4"></div><p class="text-sm mb-1 font-semibold">' + fill(APP.empty.generatingTitle, { count: AI_QS_TARGET }) + '</p><p class="text-xs text-slate-500">' + APP.empty.generatingHint + "</p></div>";
   } else if (!list.length) {
     box.innerHTML = emptyStateHtml(pool);
   } else {
@@ -263,19 +267,18 @@ function applyOpenState() {
 
 function emptyStateHtml(pool) {
   const wrap = (icon, msg, extra) => '<div class="text-center py-16 text-slate-500"><div class="text-4xl mb-3">' + icon + "</div><p class='mb-4 px-6'>" + msg + "</p>" + (extra || "") + "</div>";
-  if (pool.length) return wrap("\ud83d\udd0d", "No questions match your filters.");
+  if (pool.length) return wrap("\ud83d\udd0d", APP.empty.noMatch);
   if (activeTab === "personal") {
     return wrap("\ud83d\udcc4",
-      "No resume yet. Paste one on the left and hit <b>Generate questions</b>, or study the full question bank.",
-      '<button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-4 py-2" onclick="switchTab(\'bank\')">\ud83d\udcc4 Show all questions</button>');
+      APP.empty.personalEmpty,
+      '<button class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 rounded-lg px-4 py-2" onclick="switchTab(\'bank\')">' + APP.labels.showAllQuestions + "</button>");
   }
   if (activeTab === "bank") {
-    return wrap("\ud83d\udce6",
-      "Question bank not loaded yet \u2014 it auto-loads when served over HTTP (GitHub Pages / local server).");
+    return wrap("\ud83d\udce6", APP.empty.bankEmpty);
   }
   return wrap("\ud83e\udd16",
-    "No AI questions yet. Paste a resume, pick a model, then hit <b>Generate with AI</b> above.",
-    '<button class="text-xs font-semibold bg-violet-600 hover:bg-violet-500 rounded-lg px-4 py-2" onclick="toggleAI()">\u26a1 Generate with AI</button>');
+    APP.empty.aiEmpty,
+    '<button class="text-xs font-semibold bg-violet-600 hover:bg-violet-500 rounded-lg px-4 py-2" onclick="toggleAI()">' + APP.labels.generateAI + "</button>");
 }
 
 function setSection(key) { activeSection = key; render(); }
@@ -292,15 +295,15 @@ function qCardHtml(x) {
         (tag ? '<div class="text-[11px] text-blue-400/80 mt-1">' + esc(tag) + "</div>" : "") +
       "</div>" +
       '<div class="shrink-0 flex items-center gap-1 text-slate-500 act">' +
-        '<select class="act bg-slate-800 border ' + diffCls + ' text-[10px] rounded-full px-1.5 py-0.5 outline-none cursor-pointer" title="Tag difficulty" onclick="event.stopPropagation()" onchange="event.stopPropagation();setDiffQ(\'' + x.key + '\',this.value)">' +
-          '<option value=""' + (!d ? " selected" : "") + '>&#9679; Diff</option>' +
-          '<option value="e"' + (d === "e" ? " selected" : "") + '>Easy</option>' +
-          '<option value="m"' + (d === "m" ? " selected" : "") + '>Medium</option>' +
-          '<option value="h"' + (d === "h" ? " selected" : "") + '>Hard</option></select>' +
-        '<button class="act text-sm" title="Bookmark" onclick="event.stopPropagation();toggleBookmark(\'' + x.key + '\')">' + (bk ? "\u2b50" : "\u2606") + "</button>" +
-        '<button class="act text-sm" title="Mark for review" onclick="event.stopPropagation();toggleReview(\'' + x.key + '\')">' + (rv ? "\u21bb" : "\u21ba") + "</button>" +
-        '<button class="act text-sm" title="Copy Q&A" onclick="event.stopPropagation();copyQA(\'' + x.key + '\')">\ud83d\udccb</button>' +
-        '<button class="act-keep text-sm" title="Mark prepared" onclick="event.stopPropagation();togglePrepared(\'' + x.key + '\')">' + (done ? "\u2705" : "\u2610") + "</button>" +
+        '<select class="act bg-slate-800 border ' + diffCls + ' text-[10px] rounded-full px-1.5 py-0.5 outline-none cursor-pointer" title="' + APP.labels.tagDifficulty + '" onclick="event.stopPropagation()" onchange="event.stopPropagation();setDiffQ(\'' + x.key + '\',this.value)">' +
+          '<option value=""' + (!d ? " selected" : "") + '>&#9679; ' + APP.labels.diff + '</option>' +
+          '<option value="e"' + (d === "e" ? " selected" : "") + '>' + APP.labels.easy + '</option>' +
+          '<option value="m"' + (d === "m" ? " selected" : "") + '>' + APP.labels.medium + '</option>' +
+          '<option value="h"' + (d === "h" ? " selected" : "") + '>' + APP.labels.hard + '</option></select>' +
+        '<button class="act text-sm" title="' + APP.labels.bookmark + '" onclick="event.stopPropagation();toggleBookmark(\'' + x.key + '\')">' + (bk ? "\u2b50" : "\u2606") + "</button>" +
+        '<button class="act text-sm" title="' + APP.labels.markReview + '" onclick="event.stopPropagation();toggleReview(\'' + x.key + '\')">' + (rv ? "\u21bb" : "\u21ba") + "</button>" +
+        '<button class="act text-sm" title="' + APP.labels.copyQA + '" onclick="event.stopPropagation();copyQA(\'' + x.key + '\')">\ud83d\udccb</button>' +
+        '<button class="act-keep text-sm" title="' + APP.labels.markPrepared + '" onclick="event.stopPropagation();togglePrepared(\'' + x.key + '\')">' + (done ? "\u2705" : "\u2610") + "</button>" +
       "</div>" +
     "</div>" +
     '<div class="answer hidden px-4 pb-4 ml-11 text-sm text-slate-300 border-t border-dashed border-slate-800 pt-3"><div class="markdown">' + renderMd(x.answer) + "</div></div>" +
@@ -327,7 +330,7 @@ function toggleExpand() {
 }
 function updateExpandBtn() {
   const open = document.querySelectorAll(".q-card.open").length > 0;
-  document.getElementById("expandBtn").textContent = open ? "Collapse all" : "Expand all";
+  document.getElementById("expandBtn").textContent = open ? APP.labels.collapseAll : APP.labels.expandAll;
 }
 
 function togglePrepared(key) {
@@ -335,43 +338,43 @@ function togglePrepared(key) {
   if (prepared.has(key)) prepared.delete(key); else prepared.add(key);
   localStorage.setItem(LS.prepared, JSON.stringify([...prepared]));
   render();
-  toast("Q" + q.id + (prepared.has(key) ? " marked prepared" : " marked as new"));
+  toast(T(prepared.has(key) ? "prepared" : "new", { id: q.id }));
 }
 function toggleBookmark(key) {
   if (bookmarked.has(key)) bookmarked.delete(key); else bookmarked.add(key);
   localStorage.setItem(LS.bookmarked, JSON.stringify([...bookmarked]));
   render();
-  toast(bookmarked.has(key) ? "Bookmarked" : "Un-bookmarked", !bookmarked.has(key));
+  toast(bookmarked.has(key) ? T("bookmarked") : T("unbookmarked"), !bookmarked.has(key));
 }
 function toggleReview(key) {
   if (review.has(key)) review.delete(key); else review.add(key);
   localStorage.setItem(LS.review, JSON.stringify([...review]));
   render();
-  toast(review.has(key) ? "Queued for review" : "Removed from review", !review.has(key));
+  toast(review.has(key) ? T("queuedReview") : T("removedReview"), !review.has(key));
 }
 function setDiffQ(key, d) {
   const q = activePool().find(x => x.key === key); if (!q) return;
   setDiff(q, d);
   render();
-  toast("Q" + q.id + " difficulty set");
+  toast(T("difficultySet", { id: q.id }));
 }
 function copyQA(key) {
   const q = activePool().find(x => x.key === key); if (!q) return;
   const text = "Q" + q.id + ". " + q.question + "\n\n" + q.answer.trim();
   (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
-    .then(() => toast("Q" + q.id + " copied"))
-    .catch(() => toast("Copy failed", true));
+    .then(() => toast(T("copied", { id: q.id })))
+    .catch(() => toast(T("copyFailed"), true));
 }
 function randomQ() {
   const list = filtered();
-  if (!list.length) { toast("No questions to pick from", true); return; }
+  if (!list.length) { toast(T("noQuestionsPick"), true); return; }
   const q = list[Math.floor(Math.random() * list.length)];
   openKeys.clear();
   document.querySelectorAll(".q-card").forEach(c => { c.classList.remove("open"); const a = c.querySelector(".answer"); if (a) a.classList.add("hidden"); });
   const card = document.querySelector('.q-card[data-key="' + q.key + '"]');
   if (card) { openKeys.add(q.key); card.classList.add("open"); card.querySelector(".answer").classList.remove("hidden"); card.scrollIntoView({ behavior: "smooth", block: "start" }); }
   updateExpandBtn();
-  toast("Random: Q" + q.id);
+  toast(T("random", { id: q.id }));
 }
 function debouncedSearch() {
   clearTimeout(searchTimer);
@@ -401,21 +404,21 @@ function updateProgress() {
 
 function exportList() {
   const list = filtered();
-  if (!list.length) { toast("Nothing to export", true); return; }
-  const kind = statusSel.has("bookmarked") ? "Bookmarked" : statusSel.has("review") ? "Review Queue" : statusSel.has("prepared") ? "Prepared" : activeTab === "personal" ? "Personalized" : activeTab === "ai" ? "AI-Generated" : "Bank";
-  let out = "# " + kind + " Questions (" + list.length + ")\n\n";
-  list.forEach(q => { out += "### Q" + q.id + ". " + q.question.replace(/\.$/, "") + ".\n\n" + q.answer.trim() + "\n\n---\n\n"; });
+  if (!list.length) { toast(T("nothingExport"), true); return; }
+  const kind = statusSel.has("bookmarked") ? APP.export.kinds.bookmarked : statusSel.has("review") ? APP.export.kinds.review : statusSel.has("prepared") ? APP.export.kinds.prepared : activeTab === "personal" ? APP.export.kinds.personalized : activeTab === "ai" ? APP.export.kinds.ai : APP.export.kinds.bank;
+  let out = fill(APP.export.header, { kind, n: list.length });
+  list.forEach(q => { out += fill(APP.export.item, { id: q.id, question: q.question.replace(/\.$/, "") + ".", answer: q.answer.trim() }); });
   const blob = new Blob([out], { type: "text/markdown" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = (kind + "-questions.md").toLowerCase().replace(/\s+/g, "-");
   a.click();
   URL.revokeObjectURL(a.href);
-  toast("Exported " + list.length + " questions");
+  toast(T("exported", { n: list.length }));
 }
 
 function resetAll() {
-  if (!confirm("Reset resume, skills, and all progress? This cannot be undone.")) return;
+  if (!confirm(APP.confirm.resetAll)) return;
   Object.values(LS).forEach(k => localStorage.removeItem(k));
   localStorage.removeItem("ppp.timer");
   resumeText = ""; selectedSkills = new Set(); roleSel = new Set(); userRoles = []; prepared = new Set(); bookmarked = new Set(); review = new Set(); diff = {};
@@ -426,11 +429,11 @@ function resetAll() {
   document.getElementById("searchBox").value = "";
   document.getElementById("sortSel").value = "num";
   document.getElementById("aiPreview").classList.add("hidden");
-  document.getElementById("aiBtn").textContent = "Generate with AI";
+  document.getElementById("aiBtn").textContent = L("generateAI");
   document.getElementById("aiStatus").textContent = "";
   document.getElementById("noticeArea").innerHTML = "";
   if (window.scrollTo) window.scrollTo(0, 0);
   render();
   loadBankFromFiles(); /* restore the bank fresh after the localStorage reset */
-  toast("All data reset");
+  toast(T("allReset"));
 }

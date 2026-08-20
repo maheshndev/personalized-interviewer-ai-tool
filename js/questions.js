@@ -5,8 +5,9 @@
    Every question is built from the user's actual resume data.
 ================================================================== */
 function skillAnswer(s) {
-  if (s.a) return s.a + "\n\n- Then I'd connect this to a real project where I applied it, the trade-offs I weighed, and the measurable result.";
-  return "- Where I used " + s.name + ": across my projects and daily ERP work.\n- I'd explain a concrete example: the problem, how I applied " + s.name + ", the trade-offs, and the outcome.\n- If asked to go deeper, I can write a small example on the spot.";
+  const P = APP.templates.personalized;
+  if (s.a) return fill(P.skillA, { answer: s.a });
+  return fill(P.skillAFallback, { name: s.name });
 }
 function cleanProjName(n) { return (n || "").replace(/\([^)]*\)/g, "").trim(); }
 
@@ -37,12 +38,13 @@ function buildQuestions() {
   const r = parseResume(resumeText);
   const defs = detectSkills(resumeText);
   skillDefs = defs;
+  const P = APP.templates.personalized;
 
   const qs = [];
   let id = 1;
   const add = (question, answer, tags, kind) => {
     const qid = id++;
-    qs.push({ id: qid, key: "p" + qid, question, answer, tags: tags || [], section: "Personalized", kind: kind || "" });
+    qs.push({ id: qid, key: "p" + qid, question, answer, tags: tags || [], section: P.section, kind: kind || "" });
   };
 
   const name = r.name || "a developer";
@@ -55,13 +57,13 @@ function buildQuestions() {
   const stack = defs.map(s => s.name).slice(0, 6).join(", ");
 
   /* --- Tell me about yourself: fully built from the resume --- */
-  add("Tell me about yourself and why you're a good fit for this role.",
-    "I'm **" + name + "**" + (title ? " — " + title : "") +
-      (yearsExp ? ", with **" + yearsExp + " years** of professional experience" : "") + ".\n\n" +
-      (r.summary ? "- " + r.summary + "\n" : "") +
-      "- Key skills: " + (topSkills.join(", ") || "see my resume") + ".\n" +
-      "- Most relevant experience: " + (projNames.join(", ") || "several production projects delivered end to end") + ".\n" +
-      "- What drives me: building complete products, automating repetitive work, and shipping reliably.",
+  add(P.introQ,
+    fill(P.introA, {
+      name, title: title ? " — " + title : "", years: yearsExp ? ", with **" + yearsExp + " years** of professional experience" : "",
+      summary: r.summary ? "- " + r.summary + "\n" : "",
+      topSkills: topSkills.join(", ") || "see my resume",
+      projects: projNames.join(", ") || "several production projects delivered end to end"
+    }),
     topIds, "intro");
 
   /* --- One question per project, filled with its real data --- */
@@ -70,19 +72,18 @@ function buildQuestions() {
     if (!pname) return;
     const bullets = (p.bullets || []).slice(0, 3);
     const tags = tagFromText(pname + " " + (p.tech || "") + " " + bullets.join(" "), defs);
-    add('Tell me about your project "' + pname + '". What problem did it solve, and what was your role?',
-      "**" + pname + "**\n\n" +
-      (p.tech ? "- **Tech stack:** " + p.tech + "\n" : "") +
-      (bullets.length ? bullets.map(b => "- " + b).join("\n") + "\n" : "") +
-      (p.impact ? "- **Impact:** " + p.impact + "\n" : "") +
-      "- My role: end-to-end ownership — schema, APIs, UI, and deployment where applicable.",
+    add(fill(P.projectQ, { name: pname }),
+      fill(P.projectA, {
+        name: pname,
+        tech: p.tech ? "- **Tech stack:** " + p.tech + "\n" : "",
+        bullets: bullets.length ? bullets.map(b => "- " + b).join("\n") + "\n" : "",
+        impact: p.impact ? "- **Impact:** " + p.impact + "\n" : ""
+      }),
       tags, "project");
     const tech = (p.tech || "").trim();
     if (tech) {
-      add('Why did you choose "' + tech.split(/[,\n]/)[0].trim() + '" for the project "' + pname + '"?',
-        "- The requirement: " + (bullets[0] || "a clear business problem") + ".\n" +
-        "- Why I chose it: right fit for the data model, ecosystem, and team familiarity.\n" +
-        "- Trade-off I weighed: " + tech + " vs alternatives, and what it cost/gained us.",
+      add(fill(P.projectWhyQ, { tech: tech.split(/[,\n]/)[0].trim(), name: pname }),
+        fill(P.projectWhyA, { requirement: bullets[0] || "a clear business problem", tech }),
         tags, "project");
     }
   });
@@ -93,77 +94,61 @@ function buildQuestions() {
     const org = j.company || j.title.split("|")[0] || "my company";
     const bullets = (j.bullets || []).slice(0, 4);
     const tags = tagFromText(j.title + " " + org + " " + (j.dates || "") + " " + bullets.join(" "), defs);
-    add("Walk me through your experience at " + org.trim() + " (" + (j.dates || "dates on resume") + "). What did you own and deliver?",
-      "At **" + org.trim() + "** I worked as " + j.title + (j.dates ? " (" + j.dates + ")" : "") + ".\n\n" +
-      (bullets.map(b => "- " + b).join("\n") || "- Built and shipped features end to end.") +
-      "\n\nI'd emphasize outcomes: automation, fewer errors, faster load, or scale handled.",
+    add(fill(P.jobQ, { org: org.trim(), dates: j.dates || "dates on resume" }),
+      fill(P.jobA, {
+        org: org.trim(), title: j.title, dates: j.dates ? " (" + j.dates + ")" : "",
+        bullets: bullets.map(b => "- " + b).join("\n") || "- Built and shipped features end to end."
+      }),
       tags, "job");
   });
 
   /* --- One question per skill from the resume --- */
   defs.forEach(s => {
-    add("How have you used " + s.name + "? " + (s.q || "Give a concrete project example with trade-offs and results."),
+    add(fill(P.skillQ, { name: s.name, question: s.q || "Give a concrete project example with trade-offs and results." }),
       skillAnswer(s),
       [s.id], "skill");
   });
 
   /* --- Education and certifications from the resume --- */
   r.education.slice(0, 2).forEach(ed => {
-    add("Walk me through your educational background: " + ed + ". How did it prepare you for a development career?",
-      "- **" + ed + "**\n- I'd connect coursework and projects to the skills I use on the job.\n- I've kept learning through certifications and real product work.",
-      topIds, "education");
+    add(fill(P.eduQ, { edu: ed }), fill(P.eduA, { edu: ed }), topIds, "education");
   });
   r.certs.slice(0, 2).forEach(cert => {
-    add("You hold " + cert + ". Why did you pursue it and how do you apply it?",
-      "- I pursued it to close a specific skill gap.\n- I applied it immediately on a real project.\n- I'd explain what I learned and where I use it in daily work.",
-      topIds, "cert");
+    add(fill(P.certQ, { cert }), P.certA, topIds, "cert");
   });
 
   /* --- Achievements, with real wording from the resume --- */
   r.achievements.slice(0, 3).forEach(a => {
-    add("Tell me about an achievement you're proud of: " + a,
-      "- **Context:** what the goal was.\n- **What I did:** the approach and the challenge.\n- **Result:** " + a + ".",
-      topIds, "achievement");
+    add(fill(P.achievementQ, { achievement: a }), fill(P.achievementA, { achievement: a }), topIds, "achievement");
   });
 
   /* --- HR / behavioral questions, personalized with real resume facts --- */
   const automation = (r.achievements.concat(r.summary ? [r.summary] : []))
     .find(a => /automat|manual|transactions|workflow|reduc|save/i.test(a));
-  add("Describe a time you automated a workflow or reduced manual work.",
-    (automation ? "- From my resume: " + automation + "\n" : "- I'd pick a specific automation I built.\n") +
-    "- I'd frame it with STAR: Situation, Task, Action (what I automated and how), Result (hours/time saved, errors reduced).\n" +
-    "- Concrete metric where possible.",
+  add(P.autoQ,
+    fill(P.autoA, { fromResume: automation ? "- From my resume: " + automation + "\n" : "- I'd pick a specific automation I built.\n" }),
     topIds, "behavioral");
 
-  add("Tell me about a difficult bug or production issue you resolved.",
-    "I'd pick a real incident" + (projNames.length ? " from " + projNames[0] : "") + ":\n" +
-    "- Diagnosed with logs/metrics to find the root cause.\n" +
-    "- Fixed it safely with a rollback path, then added a regression test.\n" +
-    "- Communicated clearly and documented the lesson.\n" +
-    "- Emphasize impact: prevented recurrence and cut errors.",
+  add(P.bugQ,
+    fill(P.bugA, { fromProject: projNames.length ? " from " + projNames[0] : "" }),
     topIds, "behavioral");
 
-  add("What are your strengths and weaknesses as a developer?",
-    "**Strengths:**\n- " + (topSkills.slice(0, 3).join(", ") || "full-stack engineering") + " — applied in production, not just in tutorials.\n" +
-    "- Full-stack ownership: schema to UI to deployment.\n" +
-    "- Reliability focus: automation and fewer errors in production.\n\n" +
-    "**Weaknesses:**\n- I can over-polish details; I time-box now.\n- I sometimes want to code before requirements are fully confirmed — I write requirements down first.",
+  add(P.strengthsQ,
+    fill(P.strengthsA, { topSkills: topSkills.slice(0, 3).join(", ") || "full-stack engineering" }),
     topIds, "behavioral");
 
-  add("Where do you see yourself in five years?",
-    "A **senior full stack engineer / technical lead** — still hands-on, but designing architecture and mentoring juniors. " +
-    "I want to deepen my " + (topNames || "engineering") + " expertise and own products, not just ship tickets.",
+  add(P.fiveYearsQ,
+    fill(P.fiveYearsA, { topNames: topNames || "engineering" }),
     topIds, "behavioral");
 
-  add("Why should we hire you over other candidates?",
-    "- Proven full-stack range: " + (stack || "frontend to backend to deployment") + ".\n" +
-    "- I ship complete features with measurable outcomes" + (projNames.length ? " like " + projNames.slice(0, 2).join(" and ") : "") + ".\n" +
-    "- I automate and improve reliability, not just build features.",
+  add(P.hireQ,
+    fill(P.hireA, {
+      stack: stack || "frontend to backend to deployment",
+      projects: projNames.length ? " like " + projNames.slice(0, 2).join(" and ") : ""
+    }),
     topIds, "behavioral");
 
-  add("Do you have any questions for us?",
-    "Yes:\n1. What does the first 90 days look like in this role?\n2. How does the team do code review and deployments?\n3. What is the biggest technical challenge in the next year?\n4. Is there room to own architecture and design decisions?",
-    topIds, "behavioral");
+  add(P.questionsQ, P.questionsA, topIds, "behavioral");
 
   personalQs = qs;
 }

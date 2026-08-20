@@ -1,17 +1,20 @@
 "use strict";
 
 /* ==================================================================
-   Keyboard shortcuts
+   Keyboard shortcuts (data-driven from data/app.json)
 ================================================================== */
 window.addEventListener("keydown", e => {
   const tag = e.target.tagName;
   const typing = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
-  if (e.key === "/" && !typing) { e.preventDefault(); document.getElementById("searchBox").focus(); return; }
+  const key = e.key;
+  if (typing && key !== "/") return;
+  const action = APP.shortcuts[key] || (key.length === 1 ? APP.shortcuts[key.toLowerCase()] : null);
+  if (!action) return;
+  if (action === "search") { e.preventDefault(); document.getElementById("searchBox").focus(); return; }
   if (typing) return;
-  if (e.key === "Escape") expandAll(false);
-  else if (e.key.toLowerCase() === "r") randomQ();
-  else if (e.key.toLowerCase() === "e") expandAll(true);
-  else if (e.key.toLowerCase() === "c") expandAll(false);
+  if (action === "collapse") expandAll(false);
+  else if (action === "random") randomQ();
+  else if (action === "expand") expandAll(true);
 });
 
 /* ==================================================================
@@ -25,9 +28,10 @@ document.getElementById("resumeBox").addEventListener("input", () => {
 });
 document.getElementById("aiModel").addEventListener("change", () => { window.manualModel = document.getElementById("aiModel").value; });
 
-/* Load skill/role definitions (data/skills.json, data/roles.json) before
-   detection runs, then config/models, then the bank. Offline keeps defaults. */
+/* Load skill/role definitions (data/skills.json, data/roles.json), UI text
+   (data/app.json), filters and config before detection runs. Offline keeps defaults. */
 (async () => {
+  await loadAppData();
   await loadSkillData();
   loadFilterData();
   loadAIConfig().finally(() => loadAIModels());
