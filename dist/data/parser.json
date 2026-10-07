@@ -1,0 +1,15 @@
+{
+  "parser": {
+    "resume": {
+      "work": "work|experience|employment",
+      "project": "project",
+      "summary": "summary|about|profile",
+      "skill": "skill",
+      "education": "education|degree",
+      "cert": "certif",
+      "achievement": "achiev",
+      "contact": "contact|email|phone|location"
+    },
+    "fallbackSection": "General"
+  }
+}

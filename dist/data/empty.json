@@ -1,0 +1,13 @@
+{
+  "empty": {
+    "skillsEmpty": "Add your resume above to detect skills.",
+    "rolesEmpty": "Pick a role to focus on its questions. Detected from your resume when present.",
+    "noMatch": "No questions match your filters.",
+    "personalEmpty": "No resume yet. Paste one on the left and hit <b>Generate questions</b>, or study the full question bank.",
+    "bankEmpty": "Question bank not loaded yet — it auto-loads when served over HTTP (GitHub Pages / local server).",
+    "aiEmpty": "No AI questions yet. Paste a resume, pick a model, then hit <b>Generate with AI</b> above.",
+    "generatingTitle": "Generating {count} personalized questions…",
+    "generatingHint": "This can take up to a minute — keep this tab open.",
+    "aiGenerating": "Generating {count} AI questions from your resume…"
+  }
+}

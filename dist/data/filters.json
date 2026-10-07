@@ -1,0 +1,20 @@
+{
+  "status": {
+    "new": { "label": "New", "icon": "" },
+    "prepared": { "label": "Prepared", "icon": "" },
+    "bookmarked": { "label": "Bookmarked", "icon": "\u2b50" },
+    "review": { "label": "Review", "icon": "\u21bb" }
+  },
+  "difficulty": {
+    "e": "Easy",
+    "m": "Medium",
+    "h": "Hard",
+    "u": "Untagged"
+  },
+  "sort": [
+    { "value": "num", "label": "Sort: # asc" },
+    { "value": "numDesc", "label": "Sort: # desc" },
+    { "value": "section", "label": "Sort: by section" },
+    { "value": "random", "label": "Sort: shuffle" }
+  ]
+}

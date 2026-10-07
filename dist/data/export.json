@@ -1,0 +1,14 @@
+{
+  "export": {
+    "header": "# {kind} Questions ({n})\n\n",
+    "item": "### Q{id}. {question}\n\n{answer}\n\n---\n\n",
+    "kinds": {
+      "bookmarked": "Bookmarked",
+      "review": "Review Queue",
+      "prepared": "Prepared",
+      "personalized": "Personalized",
+      "ai": "AI-Generated",
+      "bank": "Bank"
+    }
+  }
+}

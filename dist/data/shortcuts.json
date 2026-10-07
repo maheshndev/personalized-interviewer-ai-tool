@@ -1,0 +1,9 @@
+{
+  "shortcuts": {
+    "/": "search",
+    "Escape": "collapse",
+    "r": "random",
+    "e": "expand",
+    "c": "collapse"
+  }
+}
